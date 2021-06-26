@@ -5,8 +5,11 @@ var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
-const { client_id, client_secret, redirect_uri } = require("./config.json")
-let port = process.env.PORT || 8888
+const { client_id, client_secret } = require("./config.json")
+const port = process.env.PORT || 8888
+const redirect_uri = process.env.REDIRECT_URI
+const client_id = process.env.CID
+const client_secret = process.env.SECRET
 
 /**
  * Generates a random string containingd numbers and letters
