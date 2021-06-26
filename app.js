@@ -20,7 +20,7 @@ var generateRandomString = function(length) {
   var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
   for (var i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    text += possible.charAt(Math.floor(Math.random() * possible.length)); // Smol Boi
   }
   return text;
 };
@@ -94,7 +94,8 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          console.log(body);
+          resp = `${body.display_name} - ${body.email} - ${body.product} -  ${body.external_urls.spotify}`
+          console.log(resp);
         });
 
         // we can also pass the token to the browser to make requests from there
@@ -136,5 +137,5 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-console.log(`Listening on port ${port}, proceed to http://localhost:${port}`);
+console.log(`Listening on port ${port}`);
 app.listen(port);
