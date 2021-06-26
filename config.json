@@ -1,0 +1,5 @@
+{
+  "client_id": "c1f0f0797da84a6b9e6f640c9fc83401",
+  "client_secret": "5035cecb9acb4633bce6f3da36f76f83",
+  "redirect_uri": "http://localhost:8888/callback"
+}

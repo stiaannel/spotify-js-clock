@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Spoti-Clock</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="clock">
+    <div class="clock-face">
+      <div class="hand hour-hand"></div>
+      <div class="hand min-hand"></div>
+      <div class="hand second-hand"></div>
+    </div>
+  </div>
+  <div class="digital-clock">
+    <div class="digital">
+      <span class="hour">00</span>:<span class="min">00</span>:<span class="sec">00</span>
+    </div>
+  </div>
+  <div id="nowplaying">
+  </div>
+  <div id="user-profile">
+  </div>
+
+  <div id="login">
+    <h4>Login With Spotify To See your Now Playing In The Page!</h4>
+    <img src="./assets/Spotify_Logo_RGB_Green.png" alt="">
+    <a href="/login" class="btn btn-success">Log in with Spotify</a>
+  </div>
+
+  <script id="user-profile-template" type="text/x-handlebars-template">
+    <div class="spotify-user-box">
+      <div class="usr-flag">
+        <img src="https://flagcdn.com/24x18/{{toLowerCase country}}.png" alt="" srcset="">
+      </div>
+        <div class="usr-pfp-img">
+          <img src="{{images.0.url}}" />
+          <span class="username text-overflow">{{display_name}}</span>
+          </span>
+        </div>
+      </div>
+    </script>
+
+  <script id="user-now-playing" type="text/x-handlebars-template">
+    <div class="now-playing-box">
+        <div class="np-album-img">
+          <img src="{{item.album.images.0.url}}" />
+          <span class="track text-overflow">{{item.name}}</span>
+          <span class="artist text-overflow">{{item.artists.0.name}}</span>
+          <span class="album text-overflow">{{item.album.name}}</span>
+        </div>
+      </div>
+    </script>
+
+
+  <script id="user-not-playing" type="text/x-handlebars-template">
+    <div class="now-playing-box">
+        <div class="np-album-img">
+          <!-- <img src="{{item.album.images.0.url}}" /> -->
+          <span class="username">Nothing Currently Playing</span> <a target="_blank" href="https://open.spotify.com">Start Listening</a>
+        </div>
+      </div>
+    </script>
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script>
+    (function () {
+
+      /**
+       * Obtains parameters from the hash of the URL
+       * @return Object
+       */
+      function getHashParams() {
+        var hashParams = {};
+        var e, r = /([^&;=]+)=?([^&;]*)/g,
+          q = window.location.hash.substring(1);
+        while (e = r.exec(q)) {
+          hashParams[e[1]] = decodeURIComponent(e[2]);
+        }
+        return hashParams;
+      }
+
+
+      Handlebars.registerHelper('toLowerCase', function (str) {
+        return str.toLowerCase();
+      });
+      var userProfileSource = document.getElementById('user-profile-template').innerHTML,
+        userProfileTemplate = Handlebars.compile(userProfileSource),
+        userProfilePlaceholder = document.getElementById('user-profile');
+
+      var npSource = document.getElementById('user-now-playing').innerHTML,
+        npTemplate = Handlebars.compile(npSource),
+        npPlaceholder = document.getElementById('nowplaying');
+      npNPlaying = document.getElementById('user-not-playing').innerHTML,
+        npNotPlaying = Handlebars.compile(npNPlaying)
+
+      var params = getHashParams();
+
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      if (error) {
+        alert('There was an error during the authentication');
+      } else {
+        if (access_token) {
+          getNowPlaying();
+          setInterval(getNowPlaying, 5000);
+          $.ajax({
+            url: 'https://api.spotify.com/v1/me',
+            headers: {
+              'Authorization': 'Bearer ' + access_token
+            },
+            success: function (response) {
+              userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+
+              $('#login').hide();
+              $('#loggedin').show();
+            },
+            statusCode: {
+              401: function (response) {
+                console.log('Token Expired. Refreshing Token...')
+                $.ajax({
+                  url: '/refresh_token',
+                  data: {
+                    'refresh_token': refresh_token
+                  }
+                }).done(function(data) {
+                  access_token = data.access_token;
+                });
+              }
+            }
+          });
+        } else {
+          // render initial screen
+          $('#login').show();
+          $('#loggedin').hide();
+        }
+
+        function getNowPlaying() {
+          $.ajax({
+            url: 'https://api.spotify.com/v1/me/player',
+            headers: {
+              'Authorization': 'Bearer ' + access_token
+            },
+            success: function (response) {
+              if (response.is_playing) {
+                npPlaceholder.innerHTML = npTemplate(response);
+              } else {
+                npPlaceholder.innerHTML = npNotPlaying(response);
+              }
+            },
+            statusCode: {
+              401: function (response) {
+                console.log('Token Expired. Refreshing Token...')
+                $.ajax({
+                  url: '/refresh_token',
+                  data: {
+                    'refresh_token': refresh_token
+                  }
+                }).done(function(data) {
+                  access_token = data.access_token;
+                });
+              }
+            }
+          });
+        }
+      }
+    })();
+  </script>
+  <script src="./clock.js"></script>
+
+</body>
+
+</html>
